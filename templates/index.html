@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Orchestration - Web Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .templates-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .template-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            background: #f5f5f5;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .template-item:hover {
+            background: #e8e8e8;
+        }
+
+        .template-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .result-content {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 5px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            display: block;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-badge.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .task-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-info strong {
+            color: #333;
+        }
+
+        .task-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+
+        .template-preview {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .template-preview.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Multi-Agent Orchestration</h1>
+            <p>Ask questions and get answers from your intelligent agent system</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Column: Input Form -->
+            <div class="card">
+                <h2>Ask a Question</h2>
+                
+                <div id="alertContainer"></div>
+
+                <div class="form-group">
+                    <label for="question">Your Question</label>
+                    <textarea id="question" placeholder="What would you like to know?" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="template">Select Template (Optional)</label>
+                    <select id="template" onchange="handleTemplateChange()">
+                        <option value="">-- No Template --</option>
+                    </select>
+                    <div id="templatePreview" class="template-preview"></div>
+                </div>
+
+                <button id="submitBtn" onclick="submitQuestion()">Submit Question</button>
+            </div>
+
+            <!-- Right Column: Available Templates -->
+            <div class="card">
+                <h2>Available Templates</h2>
+                <div id="templatesList" class="templates-list">
+                    <p style="color: #999;">Loading templates...</p>
+                </div>
+                <p style="color: #999; font-size: 0.9em; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    Templates are text files that can include placeholders like {question} to customize your prompts.
+                </p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let selectedTemplate = null;
+        let templates = [];
+
+        // Load templates on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadTemplates();
+            checkHealthStatus();
+        });
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${API_BASE}/templates`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    templates = data.templates;
+                    populateTemplatesList(templates);
+                    populateTemplateSelect(templates);
+                } else {
+                    showAlert('Error loading templates: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                showAlert('Failed to load templates', 'error');
+            }
+        }
+
+        function populateTemplatesList(templates) {
+            const container = document.getElementById('templatesList');
+            
+            if (templates.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No templates available. Create some template files in the prompt_templates directory.</p>';
+                return;
+            }
+
+            container.innerHTML = templates.map(template => 
+                `<div class="template-item" onclick="selectTemplate('${template}')">${template}</div>`
+            ).join('');
+        }
+
+        function populateTemplateSelect(templates) {
+            const select = document.getElementById('template');
+            const defaultOption = select.innerHTML;
+            
+            select.innerHTML = defaultOption + templates.map(template => 
+                `<option value="${template}">${template}</option>`
+            ).join('');
+        }
+
+        function selectTemplate(templateName) {
+            selectedTemplate = selectedTemplate === templateName ? null : templateName;
+            
+            const items = document.querySelectorAll('.template-item');
+            items.forEach(item => {
+                if (item.textContent === templateName && selectedTemplate === templateName) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+
+            document.getElementById('template').value = selectedTemplate || '';
+        }
+
+        async function handleTemplateChange() {
+            const select = document.getElementById('template');
+            const templateName = select.value;
+            
+            if (!templateName) {
+                document.getElementById('templatePreview').classList.remove('show');
+                selectedTemplate = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/template/${templateName}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const preview = document.getElementById('templatePreview');
+                    preview.textContent = data.content;
+                    preview.classList.add('show');
+                    selectedTemplate = templateName;
+                } else {
+                    showAlert('Error loading template: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading template:', error);
+                showAlert('Failed to load template', 'error');
+            }
+        }
+
+        async function submitQuestion() {
+            const question = document.getElementById('question').value.trim();
+            const template = document.getElementById('template').value;
+            
+            if (!question) {
+                showAlert('Please enter a question', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Processing...';
+
+            try {
+                const response = await fetch(`${API_BASE}/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        template: template || undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Question processed successfully!', 'success');
+                    displayResults(data);
+                    document.getElementById('question').value = '';
+                } else {
+                    showAlert('Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting question:', error);
+                showAlert('Failed to submit question', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit Question';
+            }
+        }
+
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            const statusClass = data.status === 'completed' ? 'completed' : 'processing';
+            const statusText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+
+            let html = `
+                <div class="result-card">
+                    <div class="task-info">
+                        <strong>Task ID:</strong> <span class="task-id">${data.task_id}</span><br>
+                        <strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <h3>Question</h3>
+                    <div class="result-content">${escapeHtml(data.question)}</div>
+            `;
+
+            if (data.result) {
+                html += `
+                    <h3 style="margin-top: 20px;">Result</h3>
+                    <div class="result-content">${escapeHtml(data.result)}</div>
+                `;
+            }
+
+            html += `</div>`;
+
+            resultsContainer.innerHTML = html;
+            resultsSection.style.display = 'block';
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.textContent = message;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function checkHealthStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (!response.ok) {
+                    showAlert('Server may be unavailable', 'error');
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+                showAlert('Cannot connect to server', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

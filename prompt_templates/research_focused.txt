@@ -1,0 +1,10 @@
+Conduct in-depth research on: {question}
+
+Focus on:
+1. Current state and existing solutions
+2. Recent developments and trends
+3. Industry standards and best practices
+4. Case studies or real-world examples
+5. Limitations and considerations
+
+Provide detailed findings with credible sources when possible.

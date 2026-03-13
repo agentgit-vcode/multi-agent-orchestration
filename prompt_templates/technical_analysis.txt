@@ -1,0 +1,11 @@
+Provide a technical analysis of: {question}
+
+Your analysis should include:
+1. Technical components and architecture
+2. Implementation considerations
+3. Performance implications
+4. Security and scalability aspects
+5. Trade-offs between different approaches
+6. Recommended best practices
+
+Assume technical audience with intermediate knowledge.

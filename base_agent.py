@@ -12,8 +12,7 @@ class BaseAgent(ABC):
 
     @abstractmethod
     def execute(self, task: Task) -> Task:
-        ''''''n        Process the task and return the updated task.
-        ''''''
+        """Process the task and return the updated task."""
         pass
 
     def _log_execution(self, task: Task, status: str):

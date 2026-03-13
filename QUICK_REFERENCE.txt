@@ -1,0 +1,189 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║           MULTI-AGENT WEB INTERFACE - QUICK REFERENCE CARD              ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌─ GETTING STARTED ─────────────────────────────────────────────────────┐
+│                                                                        │
+│  1. Install:    pip install -r requirements.txt                       │
+│  2. Run:        python run_web_interface.py                           │
+│  3. Open:       http://localhost:5000                                 │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ WEB INTERFACE ───────────────────────────────────────────────────────┐
+│                                                                        │
+│  Step 1: Type your question in the text area                          │
+│  Step 2: Select a template (optional)                                 │
+│  Step 3: Click "Submit Question"                                      │
+│  Step 4: View results below                                           │
+│                                                                        │
+│  Templates:                                                            │
+│    • comprehensive_plan.txt  - Structured planning                    │
+│    • research_focused.txt    - Research emphasis                      │
+│    • technical_analysis.txt  - Technical details                      │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ API ENDPOINTS ───────────────────────────────────────────────────────┐
+│                                                                        │
+│  Health Check:                                                         │
+│    GET /api/health                                                    │
+│                                                                        │
+│  List Templates:                                                       │
+│    GET /api/templates                                                 │
+│                                                                        │
+│  Get Template Content:                                                 │
+│    GET /api/template/{name}                                           │
+│                                                                        │
+│  Submit Question:                                                      │
+│    POST /api/ask                                                      │
+│    Body: {"question":"...", "template":"..."}                         │
+│                                                                        │
+│  Get Task Result:                                                      │
+│    GET /api/task/{task_id}                                            │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ CURL EXAMPLES ───────────────────────────────────────────────────────┐
+│                                                                        │
+│  Check server:                                                         │
+│    curl http://localhost:5000/api/health                              │
+│                                                                        │
+│  Submit question:                                                      │
+│    curl -X POST http://localhost:5000/api/ask \                       │
+│      -H "Content-Type: application/json" \                            │
+│      -d '{"question":"What is AI?"}'                                  │
+│                                                                        │
+│  With template:                                                        │
+│    curl -X POST http://localhost:5000/api/ask \                       │
+│      -H "Content-Type: application/json" \                            │
+│      -d '{"question":"What is AI?", \                                 │
+│            "template":"comprehensive_plan.txt"}'                      │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ CREATE CUSTOM TEMPLATE ──────────────────────────────────────────────┐
+│                                                                        │
+│  1. Create file: prompt_templates/my_template.txt                     │
+│  2. Add content:                                                       │
+│                                                                        │
+│     Please analyze: {question}                                        │
+│                                                                        │
+│     Provide:                                                           │
+│     1. Summary                                                         │
+│     2. Details                                                         │
+│     3. Recommendations                                                │
+│                                                                        │
+│  3. Refresh browser                                                    │
+│  4. Select your template when submitting questions                     │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ CONFIGURATION ───────────────────────────────────────────────────────┐
+│                                                                        │
+│  Change Port:                                                          │
+│    Edit web_app.py, last line:                                        │
+│    app.run(debug=True, host='0.0.0.0', port=8000)                     │
+│                                                                        │
+│  Templates Directory:                                                  │
+│    Default: prompt_templates/                                         │
+│    Edit web_app.py if you need to change it                           │
+│                                                                        │
+│  Debug Mode:                                                           │
+│    Edit web_app.py:                                                   │
+│    app.run(debug=False, ...)  # Disable for production                │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ DOCUMENTATION ───────────────────────────────────────────────────────┐
+│                                                                        │
+│  Quick Start:           QUICKSTART.md                                 │
+│  Web Interface Guide:   WEB_INTERFACE_GUIDE.md                        │
+│  Configuration:         CONFIGURATION_GUIDE.md                        │
+│  API Examples:          api_client_examples.py                        │
+│  Workflow Demo:         workflow_example.py                           │
+│  Architecture:          ARCHITECTURE.txt                              │
+│  Doc Index:             DOCUMENTATION_INDEX.md                        │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ─────────────────────────────────────────────────────┐
+│                                                                        │
+│  Can't connect?                                                        │
+│    → Is Flask running? Check: python web_app.py                       │
+│    → Is port correct? Default is 5000                                 │
+│                                                                        │
+│  Templates not showing?                                                │
+│    → Check: prompt_templates/ directory exists                        │
+│    → Refresh browser: Ctrl+F5                                         │
+│                                                                        │
+│  Port already in use?                                                  │
+│    → Change port in web_app.py (last line)                            │
+│    → Or: netstat -ano | findstr :5000  (Windows)                      │
+│                                                                        │
+│  Agent errors?                                                         │
+│    → Check Flask console output                                       │
+│    → Verify all agent files exist                                     │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ PYTHON API EXAMPLE ──────────────────────────────────────────────────┐
+│                                                                        │
+│  import requests                                                       │
+│                                                                        │
+│  response = requests.post('http://localhost:5000/api/ask', json={     │
+│      'question': 'What is machine learning?',                         │
+│      'template': 'technical_analysis.txt'                             │
+│  })                                                                    │
+│                                                                        │
+│  result = response.json()                                             │
+│  print(f"Task ID: {result['task_id']}")                               │
+│  print(f"Status: {result['status']}")                                 │
+│  print(f"Result: {result['result']}")                                 │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ KEY FEATURES ────────────────────────────────────────────────────────┐
+│                                                                        │
+│  ✓ Web interface at http://localhost:5000                             │
+│  ✓ Prompt templates for customization                                 │
+│  ✓ REST API for programmatic access                                   │
+│  ✓ Task tracking with unique IDs                                      │
+│  ✓ Multi-agent orchestration pipeline                                 │
+│  ✓ Template preview before submission                                 │
+│  ✓ Mobile responsive design                                           │
+│  ✓ CORS enabled for cross-origin requests                             │
+│  ✓ Comprehensive error handling                                       │
+│  ✓ Logging and debugging support                                      │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+┌─ FILES CREATED ───────────────────────────────────────────────────────┐
+│                                                                        │
+│  Core:                                                                 │
+│    • web_app.py          - Flask web application                      │
+│    • prompt_manager.py   - Template management                        │
+│    • run_web_interface.py - Startup script                            │
+│    • templates/index.html - Web UI                                    │
+│                                                                        │
+│  Templates:                                                            │
+│    • prompt_templates/comprehensive_plan.txt                          │
+│    • prompt_templates/research_focused.txt                            │
+│    • prompt_templates/technical_analysis.txt                          │
+│                                                                        │
+│  Examples:                                                             │
+│    • api_client_examples.py                                           │
+│    • workflow_example.py                                              │
+│                                                                        │
+│  Documentation:                                                        │
+│    • QUICKSTART.md, WEB_INTERFACE_GUIDE.md                            │
+│    • CONFIGURATION_GUIDE.md, ARCHITECTURE.txt                         │
+│    • And more...                                                       │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  Questions? See DOCUMENTATION_INDEX.md or QUICKSTART.md                 ║
+║  Ready? Run: python run_web_interface.py                                ║
+║  Then open: http://localhost:5000                                        ║
+╚══════════════════════════════════════════════════════════════════════════╝
