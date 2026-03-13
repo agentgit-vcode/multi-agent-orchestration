@@ -1,0 +1,8 @@
+﻿# Multi-Agent Orchestration Framework
+# Core dependencies for the project
+
+# Optional: For LLM integration
+# openai>=0.27.0
+# langchain>=0.0.200
+# python-dotenv>=0.21.0
+
