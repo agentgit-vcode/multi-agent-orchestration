@@ -33,8 +33,7 @@ def main():
     )
 
     print(f'Starting task: {task.id}')
-    print(f'Query: {task.initial_query}
-')
+    print(f'Query: {task.initial_query}')
 
     # Execute orchestration
     completed_task = orchestrator.execute(task)

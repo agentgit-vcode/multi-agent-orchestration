@@ -6,12 +6,16 @@ import logging
 
 
 class AnalyzerAgent(BaseAgent):
-    def __init__(self):
+    def __init__(self, llm=None):
         super().__init__('AnalyzerAgent', AgentType.ANALYZER)
         self.use_llm = is_llm_available()
         self.instructions_manager = get_instructions_manager()
 
-        if self.use_llm:
+        if llm:
+            self.llm = llm
+            self.use_llm = True
+            self.logger.info("AnalyzerAgent using provided LLM handler")
+        elif self.use_llm:
             self.llm = get_llm_handler()
             self.logger.info("AnalyzerAgent using OpenAI LLM with custom instructions")
         else:
@@ -40,12 +44,20 @@ RESEARCH PHASE OUTPUT:
 
 Provide thorough analysis following the instructions."""
 
-                task.analysis = self.llm.call(
+                result = self.llm.call(
                     prompt=user_prompt,
                     system_prompt=system_prompt,
-                    max_tokens=1800
+                    max_tokens=1800,
+                    agent_name=self.name
                 )
-                self.logger.info("Analysis generated using OpenAI with custom instructions")
+                task.analysis = result['text']
+
+                # Store metrics
+                if 'agent_metrics' not in task.metadata:
+                    task.metadata['agent_metrics'] = []
+                task.metadata['agent_metrics'].append(result['metrics'].to_dict())
+
+                self.logger.info("Analysis generated using LLM with custom instructions")
             except Exception as e:
                 self.logger.error(f"Error calling LLM: {e}")
                 task.analysis = f'Analysis of research data for: {task.initial_query}\n\nKey Finding 1: Important insight from research\nKey Finding 2: Significant pattern identified\nKey Finding 3: Actionable conclusion'

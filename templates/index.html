@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Agent Orchestration - Web Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -72,7 +74,9 @@
             font-weight: 500;
         }
 
-        input, textarea, select {
+        input,
+        textarea,
+        select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -82,7 +86,9 @@
             transition: border-color 0.3s;
         }
 
-        input:focus, textarea:focus, select:focus {
+        input:focus,
+        textarea:focus,
+        select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -90,7 +96,7 @@
 
         textarea {
             resize: vertical;
-            min-height: 120px;
+            min-height: 150px;
         }
 
         button {
@@ -121,32 +127,92 @@
             transform: none;
         }
 
-        .templates-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-        }
-
-        .template-item {
-            padding: 10px;
-            margin-bottom: 5px;
+        /* Instruction styles */
+        .instruction-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
             background: #f5f5f5;
-            border-radius: 3px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, border-left 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
         }
 
-        .template-item:hover {
+        .instruction-item:hover {
             background: #e8e8e8;
+            border-left-color: #667eea;
         }
 
-        .template-item.selected {
-            background: #667eea;
+        .instruction-item.selected {
+            background: #eef0fd;
+            border-left-color: #667eea;
+        }
+
+        .instruction-item .agent-label {
+            font-size: 1em;
+        }
+
+        .instruction-item .agent-desc {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .instruction-editor {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .instruction-editor.show {
+            display: block;
+        }
+
+        .instruction-editor textarea {
+            min-height: 200px;
+            max-height: 350px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .instruction-editor .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .instruction-editor .editor-header h4 {
+            color: #333;
+            margin: 0;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
             color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: auto;
         }
 
+        .save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(40, 167, 69, 0.4);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results section */
         .results-section {
             grid-column: 1 / -1;
         }
@@ -178,6 +244,7 @@
             overflow-y: auto;
         }
 
+        /* Loading spinner */
         .loading {
             display: inline-block;
             width: 20px;
@@ -189,9 +256,12 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
+        /* Alerts */
         .alert {
             padding: 15px;
             border-radius: 5px;
@@ -257,6 +327,134 @@
             color: #666;
         }
 
+        /* Analytics Dashboard */
+        .analytics-section {
+            margin-top: 30px;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.85em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 0.75em;
+            color: #aaa;
+            margin-top: 3px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+        }
+
+        /* Run history table */
+        .history-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-card h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .history-table th {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .history-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        .history-table tr:hover td {
+            background: #f8f9fa;
+        }
+
+        .model-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .model-badge.google {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .model-badge.openai {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .est-label {
+            font-size: 0.7em;
+            color: #aaa;
+            font-style: italic;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -269,29 +467,18 @@
             .card {
                 padding: 20px;
             }
-        }
 
-        .template-preview {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            margin-top: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            color: #333;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
+            .analytics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
 
-        .template-preview.show {
-            display: block;
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -301,36 +488,41 @@
 
         <div class="main-content">
             <!-- Left Column: Input Form -->
-            <div class="card">
+            <div class="card" style="display: flex; flex-direction: column;">
                 <h2>Ask a Question</h2>
-                
+
                 <div id="alertContainer"></div>
 
                 <div class="form-group">
-                    <label for="question">Your Question</label>
-                    <textarea id="question" placeholder="What would you like to know?" required></textarea>
+                    <label for="modelSelect">LLM Model</label>
+                    <select id="modelSelect">
+                        <option value="">Loading models...</option>
+                    </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="template">Select Template (Optional)</label>
-                    <select id="template" onchange="handleTemplateChange()">
-                        <option value="">-- No Template --</option>
-                    </select>
-                    <div id="templatePreview" class="template-preview"></div>
+                <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                    <label for="question">Your Question</label>
+                    <textarea id="question" placeholder="What would you like to know?" required
+                        style="flex: 1;"></textarea>
                 </div>
 
                 <button id="submitBtn" onclick="submitQuestion()">Submit Question</button>
             </div>
 
-            <!-- Right Column: Available Templates -->
+            <!-- Right Column: Agent Instructions -->
             <div class="card">
-                <h2>Available Templates</h2>
-                <div id="templatesList" class="templates-list">
-                    <p style="color: #999;">Loading templates...</p>
+                <h2>Agent Instructions</h2>
+                <div id="instructionsList">
+                    <p style="color: #999;">Loading instructions...</p>
                 </div>
-                <p style="color: #999; font-size: 0.9em; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-                    Templates are text files that can include placeholders like {question} to customize your prompts.
-                </p>
+                <div id="instructionEditor" class="instruction-editor">
+                    <div class="editor-header">
+                        <h4 id="editorTitle">Select an agent</h4>
+                        <button class="save-btn" id="saveInstructionBtn" onclick="saveInstruction()">Save</button>
+                    </div>
+                    <textarea id="instructionContent"
+                        placeholder="Select an agent above to view its instructions"></textarea>
+                </div>
             </div>
         </div>
 
@@ -338,106 +530,181 @@
         <div id="resultsSection" class="results-section" style="display: none;">
             <div id="resultsContainer"></div>
         </div>
+
+        <!-- Analytics Dashboard -->
+        <div id="analyticsSection" class="analytics-section" style="display: none;">
+            <!-- Summary stats -->
+            <div class="analytics-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotalTokens">0</div>
+                    <div class="stat-label">Total Tokens</div>
+                    <div class="stat-sub" id="statTokensSub"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statDuration">0s</div>
+                    <div class="stat-label">Pipeline Time</div>
+                    <div class="stat-sub" id="statDurationSub"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statModel">—</div>
+                    <div class="stat-label">Model</div>
+                    <div class="stat-sub" id="statModelSub"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRuns">0</div>
+                    <div class="stat-label">Total Runs</div>
+                    <div class="stat-sub" id="statRunsSub"></div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>⏱ Agent Execution Time (seconds)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="timingChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>📊 Token Usage by Agent</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="tokenChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Run History -->
+            <div class="history-card">
+                <h3>📋 Run History</h3>
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Model</th>
+                                <th>Total Tokens</th>
+                                <th>Duration</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:#999;">No runs yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const API_BASE = '/api';
-        let selectedTemplate = null;
-        let templates = [];
+        let selectedAgent = null;
+        let agentInstructions = {};
+        let timingChart = null;
+        let tokenChart = null;
 
-        // Load templates on page load
+        const AGENT_META = {
+            planner: { label: 'Planner Agent', desc: 'Creates structured plans from queries' },
+            researcher: { label: 'Researcher Agent', desc: 'Gathers research data and facts' },
+            analyzer: { label: 'Analyzer Agent', desc: 'Analyzes data and draws conclusions' },
+            publisher: { label: 'Publisher Agent', desc: 'Compiles final publishable output' }
+        };
+
+        const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c'];
+
+        // ---- Init ----
+
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadTemplates();
+            await Promise.all([loadModels(), loadInstructions()]);
+            await loadAnalytics();
             checkHealthStatus();
         });
 
-        async function loadTemplates() {
+        // ---- Models ----
+
+        async function loadModels() {
             try {
-                const response = await fetch(`${API_BASE}/templates`);
+                const response = await fetch(`${API_BASE}/models`);
                 const data = await response.json();
-                
                 if (data.success) {
-                    templates = data.templates;
-                    populateTemplatesList(templates);
-                    populateTemplateSelect(templates);
-                } else {
-                    showAlert('Error loading templates: ' + data.error, 'error');
+                    const select = document.getElementById('modelSelect');
+                    select.innerHTML = data.models.map((m, i) =>
+                        `<option value="${m.provider}/${m.model}" ${i === 0 ? 'selected' : ''}>${m.label} (${m.model})</option>`
+                    ).join('');
                 }
             } catch (error) {
-                console.error('Error loading templates:', error);
-                showAlert('Failed to load templates', 'error');
+                console.error('Error loading models:', error);
             }
         }
 
-        function populateTemplatesList(templates) {
-            const container = document.getElementById('templatesList');
-            
-            if (templates.length === 0) {
-                container.innerHTML = '<p style="color: #999;">No templates available. Create some template files in the prompt_templates directory.</p>';
-                return;
-            }
+        // ---- Agent Instructions ----
 
-            container.innerHTML = templates.map(template => 
-                `<div class="template-item" onclick="selectTemplate('${template}')">${template}</div>`
-            ).join('');
-        }
-
-        function populateTemplateSelect(templates) {
-            const select = document.getElementById('template');
-            const defaultOption = select.innerHTML;
-            
-            select.innerHTML = defaultOption + templates.map(template => 
-                `<option value="${template}">${template}</option>`
-            ).join('');
-        }
-
-        function selectTemplate(templateName) {
-            selectedTemplate = selectedTemplate === templateName ? null : templateName;
-            
-            const items = document.querySelectorAll('.template-item');
-            items.forEach(item => {
-                if (item.textContent === templateName && selectedTemplate === templateName) {
-                    item.classList.add('selected');
-                } else {
-                    item.classList.remove('selected');
-                }
-            });
-
-            document.getElementById('template').value = selectedTemplate || '';
-        }
-
-        async function handleTemplateChange() {
-            const select = document.getElementById('template');
-            const templateName = select.value;
-            
-            if (!templateName) {
-                document.getElementById('templatePreview').classList.remove('show');
-                selectedTemplate = null;
-                return;
-            }
-
+        async function loadInstructions() {
             try {
-                const response = await fetch(`${API_BASE}/template/${templateName}`);
+                const response = await fetch(`${API_BASE}/instructions`);
                 const data = await response.json();
-                
                 if (data.success) {
-                    const preview = document.getElementById('templatePreview');
-                    preview.textContent = data.content;
-                    preview.classList.add('show');
-                    selectedTemplate = templateName;
-                } else {
-                    showAlert('Error loading template: ' + data.error, 'error');
+                    agentInstructions = data.instructions;
+                    renderInstructionsList();
                 }
             } catch (error) {
-                console.error('Error loading template:', error);
-                showAlert('Failed to load template', 'error');
+                console.error('Error loading instructions:', error);
             }
         }
+
+        function renderInstructionsList() {
+            const container = document.getElementById('instructionsList');
+            container.innerHTML = Object.keys(AGENT_META).map(agent => `
+                <div class="instruction-item ${selectedAgent === agent ? 'selected' : ''}"
+                     onclick="selectInstruction('${agent}')">
+                    <div class="agent-label">${AGENT_META[agent].label}</div>
+                    <div class="agent-desc">${AGENT_META[agent].desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectInstruction(agentName) {
+            selectedAgent = agentName;
+            renderInstructionsList();
+            const editor = document.getElementById('instructionEditor');
+            document.getElementById('editorTitle').textContent = AGENT_META[agentName].label + ' Instructions';
+            document.getElementById('instructionContent').value = agentInstructions[agentName] || '';
+            editor.classList.add('show');
+        }
+
+        async function saveInstruction() {
+            if (!selectedAgent) return;
+            const content = document.getElementById('instructionContent').value;
+            const btn = document.getElementById('saveInstructionBtn');
+            btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                const response = await fetch(`${API_BASE}/instructions/${selectedAgent}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    agentInstructions[selectedAgent] = content;
+                    showAlert(`${AGENT_META[selectedAgent].label} instructions saved!`, 'success');
+                } else {
+                    showAlert('Error saving: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to save instructions', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Save';
+            }
+        }
+
+        // ---- Submit Question ----
 
         async function submitQuestion() {
             const question = document.getElementById('question').value.trim();
-            const template = document.getElementById('template').value;
-            
+            const model = document.getElementById('modelSelect').value;
+
             if (!question) {
                 showAlert('Please enter a question', 'error');
                 return;
@@ -450,13 +717,8 @@
             try {
                 const response = await fetch(`${API_BASE}/ask`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question: question,
-                        template: template || undefined
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, model })
                 });
 
                 const data = await response.json();
@@ -465,6 +727,12 @@
                     showAlert('Question processed successfully!', 'success');
                     displayResults(data);
                     document.getElementById('question').value = '';
+
+                    // Update analytics
+                    if (data.metrics) {
+                        updateAnalyticsDashboard(data.metrics);
+                    }
+                    await loadAnalytics();
                 } else {
                     showAlert('Error: ' + data.error, 'error');
                 }
@@ -477,10 +745,12 @@
             }
         }
 
+        // ---- Results Display ----
+
         function displayResults(data) {
             const resultsSection = document.getElementById('resultsSection');
             const resultsContainer = document.getElementById('resultsContainer');
-            
+
             const statusClass = data.status === 'completed' ? 'completed' : 'processing';
             const statusText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
 
@@ -488,7 +758,8 @@
                 <div class="result-card">
                     <div class="task-info">
                         <strong>Task ID:</strong> <span class="task-id">${data.task_id}</span><br>
-                        <strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span>
+                        <strong>Model:</strong> <span class="model-badge ${data.model?.split('/')[0] || ''}">${data.model || 'default'}</span>
+                        <strong style="margin-left:15px;">Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span>
                     </div>
                     <h3>Question</h3>
                     <div class="result-content">${escapeHtml(data.question)}</div>
@@ -502,26 +773,130 @@
             }
 
             html += `</div>`;
-
             resultsContainer.innerHTML = html;
             resultsSection.style.display = 'block';
-            
-            // Scroll to results
             resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        // ---- Analytics Dashboard ----
+
+        function updateAnalyticsDashboard(metrics) {
+            document.getElementById('analyticsSection').style.display = 'block';
+
+            // Update stat cards
+            const isEstimated = metrics.agent_calls?.some(c => c.tokens_estimated);
+            document.getElementById('statTotalTokens').textContent = metrics.total_tokens?.toLocaleString() || '0';
+            document.getElementById('statTokensSub').textContent = isEstimated ? '(estimated)' : '(exact)';
+            document.getElementById('statDuration').textContent = metrics.total_duration_seconds + 's';
+            document.getElementById('statModel').textContent = metrics.model || '—';
+            document.getElementById('statModelSub').textContent = metrics.provider || '';
+
+            // Update timing chart
+            const timings = metrics.agent_timings || {};
+            const labels = Object.keys(timings);
+            const durations = Object.values(timings);
+
+            if (timingChart) timingChart.destroy();
+            timingChart = new Chart(document.getElementById('timingChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels.map(l => l.replace('Agent', '')),
+                    datasets: [{
+                        label: 'Seconds',
+                        data: durations,
+                        backgroundColor: CHART_COLORS,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: 'Seconds' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            // Update token chart
+            const calls = metrics.agent_calls || [];
+            if (tokenChart) tokenChart.destroy();
+            tokenChart = new Chart(document.getElementById('tokenChart'), {
+                type: 'bar',
+                data: {
+                    labels: calls.map(c => c.agent_name.replace('Agent', '')),
+                    datasets: [
+                        {
+                            label: 'Prompt Tokens',
+                            data: calls.map(c => c.prompt_tokens),
+                            backgroundColor: '#667eea',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Completion Tokens',
+                            data: calls.map(c => c.completion_tokens),
+                            backgroundColor: '#f093fb',
+                            borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Tokens' } }
+                    }
+                }
+            });
+        }
+
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics`);
+                const data = await response.json();
+
+                if (data.success && data.history && data.history.length > 0) {
+                    document.getElementById('analyticsSection').style.display = 'block';
+
+                    // Update runs stat
+                    document.getElementById('statRuns').textContent = data.stats.total_tasks;
+                    document.getElementById('statRunsSub').textContent =
+                        `avg ${data.stats.avg_tokens_per_task} tok/run`;
+
+                    // Update history table
+                    const tbody = document.getElementById('historyBody');
+                    tbody.innerHTML = data.history.map(run => `
+                        <tr>
+                            <td title="${escapeHtml(run.question)}">${escapeHtml(run.question)}</td>
+                            <td><span class="model-badge ${run.provider}">${run.provider}/${run.model}</span></td>
+                            <td>${run.total_tokens.toLocaleString()} ${run.agent_calls?.some(c => c.tokens_estimated) ? '<span class="est-label">est.</span>' : ''}</td>
+                            <td>${run.total_duration_seconds}s</td>
+                            <td>${new Date(run.timestamp).toLocaleTimeString()}</td>
+                        </tr>
+                    `).join('');
+
+                    // Show latest metrics in charts if no current metrics displayed
+                    if (!timingChart && data.history.length > 0) {
+                        updateAnalyticsDashboard(data.history[0]);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        // ---- Utilities ----
 
         function showAlert(message, type = 'info') {
             const container = document.getElementById('alertContainer');
             const alert = document.createElement('div');
             alert.className = `alert ${type}`;
             alert.textContent = message;
-            
             container.innerHTML = '';
             container.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
+            setTimeout(() => { alert.style.display = 'none'; }, 5000);
         }
 
         function escapeHtml(text) {
@@ -533,14 +908,12 @@
         async function checkHealthStatus() {
             try {
                 const response = await fetch(`${API_BASE}/health`);
-                if (!response.ok) {
-                    showAlert('Server may be unavailable', 'error');
-                }
+                if (!response.ok) showAlert('Server may be unavailable', 'error');
             } catch (error) {
-                console.error('Health check failed:', error);
                 showAlert('Cannot connect to server', 'error');
             }
         }
     </script>
 </body>
+
 </html>

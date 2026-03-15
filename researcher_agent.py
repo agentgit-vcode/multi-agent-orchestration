@@ -6,12 +6,16 @@ import logging
 
 
 class ResearcherAgent(BaseAgent):
-    def __init__(self):
+    def __init__(self, llm=None):
         super().__init__('ResearcherAgent', AgentType.RESEARCHER)
         self.use_llm = is_llm_available()
         self.instructions_manager = get_instructions_manager()
 
-        if self.use_llm:
+        if llm:
+            self.llm = llm
+            self.use_llm = True
+            self.logger.info("ResearcherAgent using provided LLM handler")
+        elif self.use_llm:
             self.llm = get_llm_handler()
             self.logger.info("ResearcherAgent using OpenAI LLM with custom instructions")
         else:
@@ -37,12 +41,20 @@ PLANNING OUTPUT (from previous phase):
 
 Conduct comprehensive research following the instructions."""
 
-                task.research_data = self.llm.call(
+                result = self.llm.call(
                     prompt=user_prompt,
                     system_prompt=system_prompt,
-                    max_tokens=2000
+                    max_tokens=2000,
+                    agent_name=self.name
                 )
-                self.logger.info("Research data generated using OpenAI with custom instructions")
+                task.research_data = result['text']
+
+                # Store metrics
+                if 'agent_metrics' not in task.metadata:
+                    task.metadata['agent_metrics'] = []
+                task.metadata['agent_metrics'].append(result['metrics'].to_dict())
+
+                self.logger.info("Research data generated using LLM with custom instructions")
             except Exception as e:
                 self.logger.error(f"Error calling LLM: {e}")
                 task.research_data = f'Research findings for: {task.initial_query}\n\nSource 1: Information about the topic\nSource 2: Key facts and details\nSource 3: Supporting evidence'

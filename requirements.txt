@@ -8,6 +8,7 @@ Flask-CORS>=4.0.0
 # LLM Integration
 openai>=1.0.0
 python-dotenv>=1.0.0
+google-genai>=0.3.0
 
 # Optional: For additional LLM integration
 # langchain>=0.0.200

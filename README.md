@@ -11,49 +11,122 @@ This is a Python-based multi-agent orchestration system where tasks flow through
 
 ## Architecture
 
-``nTask Input
+```
+Task Input
     |
     v
 [Planner] --> [Researcher] --> [Analyzer] --> [Publisher]
                                                     |
                                                     v
                                               Final Output
-`'
+```
 
 ## Project Structure
 
-` ` + char(96) + `ash
+```bash
 multi-agent-orchestration/
-├── models.py              # Data models (Task, AgentType)
-├── base_agent.py          # Abstract base class for all agents
-├── planner_agent.py       # Planner agent implementation
-├── researcher_agent.py    # Researcher agent implementation
-├── analyzer_agent.py      # Analyzer agent implementation
-├── publisher_agent.py     # Publisher agent implementation
-├── orchestrator.py        # Main orchestration logic
-├── main.py               # Example usage
-├── requirements.txt       # Python dependencies
-└── README.md             # This file
-` ` + char(96) + `'
+├── main.py                    # CLI entry point
+├── run_web_interface.py       # Web interface launcher
+├── web_app.py                 # Flask web application & REST API
+├── orchestrator.py            # Main orchestration logic
+├── base_agent.py              # Abstract base class for all agents
+├── models.py                  # Data models (Task, AgentType)
+├── llm_handler.py             # LLM integration (OpenAI & Google Gemini)
+├── prompt_manager.py          # Prompt template manager
+├── agent_instructions_manager.py  # Agent instructions loader
+├── planner_agent.py           # Planner agent implementation
+├── researcher_agent.py        # Researcher agent implementation
+├── analyzer_agent.py          # Analyzer agent implementation
+├── publisher_agent.py         # Publisher agent implementation
+├── agent_instructions/        # Custom instructions per agent
+│   ├── planner.txt
+│   ├── researcher.txt
+│   ├── analyzer.txt
+│   └── publisher.txt
+├── prompt_templates/          # Prompt templates for the web UI
+│   ├── comprehensive_plan.txt
+│   ├── research_focused.txt
+│   └── technical_analysis.txt
+├── templates/
+│   └── index.html             # Web interface HTML
+├── .env.example               # Environment variable template
+├── requirements.txt           # Python dependencies
+└── README.md                  # This file
+```
 
 ## Quick Start
 
-### Installation
+### 1. Install Dependencies
 
-` ` + char(96) + `ash
-pip install -r requirements.txt
-` ` + char(96) + `'
+```bash
+pip3 install -r requirements.txt
+```
 
-### Running the Example
+### 2. Configure Environment
 
-` ` + char(96) + `ash
-python main.py
-` ` + char(96) + `'
+Copy the example environment file and add your API key:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your preferred LLM provider:
+
+```env
+# Use Google Gemini
+LLM_PROVIDER=google
+GOOGLE_API_KEY=your-google-api-key-here
+
+# Or use OpenAI
+# LLM_PROVIDER=openai
+# OPENAI_API_KEY=your-openai-api-key-here
+# OPENAI_MODEL=gpt-3.5-turbo
+# OPENAI_TEMPERATURE=0.7
+```
+
+### 3. Run the CLI Example
+
+```bash
+python3 main.py
+```
+
+### 4. Run the Web Interface
+
+```bash
+python3 run_web_interface.py
+```
+
+Open [http://localhost:5000](http://localhost:5000) in your browser.
+
+> **Note (macOS):** Port 5000 may be occupied by AirPlay Receiver. Either disable it in **System Settings → General → AirDrop & Handoff**, or start on a different port:
+> ```bash
+> python3 -c "from web_app import app; app.run(debug=True, host='0.0.0.0', port=5001)"
+> ```
+
+## Web Interface
+
+The web interface provides a visual way to interact with the multi-agent system:
+
+- **Ask a Question** — Type your query and optionally select a prompt template
+- **Agent Instructions** — View and edit each agent's system instructions directly from the UI
+- **REST API** — Programmatic access via API endpoints:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Web interface |
+| `/api/ask` | POST | Submit a question |
+| `/api/task/<task_id>` | GET | Get task status/results |
+| `/api/instructions` | GET | List all agent instructions |
+| `/api/instructions/<name>` | PUT | Update agent instructions |
+| `/api/templates` | GET | List prompt templates |
+| `/api/template/<name>` | GET | Get template content |
+| `/api/health` | GET | Health check |
 
 ## How It Works
 
 ### 1. Create a Task
-\n` ` + char(96) + `python
+
+```python
 from models import Task
 import uuid
 
@@ -61,10 +134,11 @@ task = Task(
     id=str(uuid.uuid4()),
     initial_query='Your question or topic here'
 )
-` ` + char(96) + `'
+```
 
 ### 2. Initialize Agents
-\n` ` + char(96) + `python
+
+```python
 from planner_agent import PlannerAgent
 from researcher_agent import ResearcherAgent
 from analyzer_agent import AnalyzerAgent
@@ -76,21 +150,23 @@ agents = [
     AnalyzerAgent(),
     PublisherAgent()
 ]
-` ` + char(96) + `'
+```
 
 ### 3. Create Orchestrator and Execute
-\n` ` + char(96) + `python
+
+```python
 from orchestrator import Orchestrator
 
 orchestrator = Orchestrator(agents)
 completed_task = orchestrator.execute(task)
 print(completed_task.final_output)
-` ` + char(96) + `'
+```
 
 ## Extending the Framework
 
 ### Creating Custom Agents
-\n` ` + char(96) + `python
+
+```python
 from base_agent import BaseAgent
 from models import AgentType, Task
 
@@ -103,25 +179,26 @@ class CustomAgent(BaseAgent):
         task.custom_field = 'Your processing result'
         task.mark_agent_complete(self.agent_type)
         return task
-` ` + char(96) + `'
+```
 
-### Adding LLM Integration
-\nTo integrate with OpenAI or other LLMs, update the agent's execute method:\n\n` ` + char(96) + `python
-import openai
+### Customizing Agent Instructions
 
-class PlannerAgent(BaseAgent):
-    def execute(self, task: Task) -> Task:
-        response = openai.ChatCompletion.create(
-            model='gpt-4',
-            messages=[{
-                'role': 'user',
-                'content': f'Create a plan for: {task.initial_query}'
-            }]
-        )
-        task.plan = response.choices[0].message.content
-        task.mark_agent_complete(self.agent_type)
-        return task
-` ` + char(96) + `'
+Each agent loads custom instructions from text files in the `agent_instructions/` directory. Edit these files to change how each agent behaves:
+
+- `agent_instructions/planner.txt` — Planning strategy and output format
+- `agent_instructions/researcher.txt` — Research approach and depth
+- `agent_instructions/analyzer.txt` — Analysis framework and methodology
+- `agent_instructions/publisher.txt` — Report format and structure
+
+### Adding Prompt Templates
+
+Create `.txt` files in the `prompt_templates/` directory. Use `{question}` as a placeholder for user input:
+
+```text
+You are tasked with the following question: {question}
+
+Please provide a detailed, step-by-step response.
+```
 
 ## Features
 
@@ -130,13 +207,7 @@ class PlannerAgent(BaseAgent):
 - ✅ Logging and monitoring
 - ✅ Batch task processing
 - ✅ Extensible agent framework
-- ✅ Easy LLM integration
-
-## Next Steps
-
-1. Modify agent logic to match your use case
-2. Add LLM integration (OpenAI, Anthropic, Hugging Face, etc.)
-3. Implement error handling and retry logic
-4. Add persistence layer for task history
-5. Create API endpoint for remote access
-
+- ✅ LLM integration (OpenAI & Google Gemini)
+- ✅ Flask web interface with REST API
+- ✅ Customizable agent instructions
+- ✅ Prompt template system

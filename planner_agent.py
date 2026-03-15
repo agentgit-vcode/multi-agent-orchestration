@@ -6,12 +6,16 @@ import logging
 
 
 class PlannerAgent(BaseAgent):
-    def __init__(self):
+    def __init__(self, llm=None):
         super().__init__('PlannerAgent', AgentType.PLANNER)
         self.use_llm = is_llm_available()
         self.instructions_manager = get_instructions_manager()
 
-        if self.use_llm:
+        if llm:
+            self.llm = llm
+            self.use_llm = True
+            self.logger.info("PlannerAgent using provided LLM handler")
+        elif self.use_llm:
             self.llm = get_llm_handler()
             self.logger.info("PlannerAgent using OpenAI LLM with custom instructions")
         else:
@@ -29,12 +33,20 @@ class PlannerAgent(BaseAgent):
                 # User prompt is ONLY the scenario
                 user_prompt = f"Please create a plan for this scenario:\n\n{task.initial_query}"
 
-                task.plan = self.llm.call(
+                result = self.llm.call(
                     prompt=user_prompt,
                     system_prompt=system_prompt,
-                    max_tokens=1500
+                    max_tokens=1500,
+                    agent_name=self.name
                 )
-                self.logger.info("Plan generated using OpenAI with custom instructions")
+                task.plan = result['text']
+
+                # Store metrics
+                if 'agent_metrics' not in task.metadata:
+                    task.metadata['agent_metrics'] = []
+                task.metadata['agent_metrics'].append(result['metrics'].to_dict())
+
+                self.logger.info("Plan generated using LLM with custom instructions")
             except Exception as e:
                 self.logger.error(f"Error calling LLM: {e}")
                 task.plan = f'Plan for: {task.initial_query}\n\nStep 1: Break down the query\nStep 2: Identify key information needed\nStep 3: Create structured approach'

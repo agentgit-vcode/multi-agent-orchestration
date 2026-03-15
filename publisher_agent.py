@@ -6,12 +6,16 @@ import logging
 
 
 class PublisherAgent(BaseAgent):
-    def __init__(self):
+    def __init__(self, llm=None):
         super().__init__('PublisherAgent', AgentType.PUBLISHER)
         self.use_llm = is_llm_available()
         self.instructions_manager = get_instructions_manager()
 
-        if self.use_llm:
+        if llm:
+            self.llm = llm
+            self.use_llm = True
+            self.logger.info("PublisherAgent using provided LLM handler")
+        elif self.use_llm:
             self.llm = get_llm_handler()
             self.logger.info("PublisherAgent using OpenAI LLM with custom instructions")
         else:
@@ -43,12 +47,20 @@ ANALYSIS PHASE OUTPUT:
 
 Create a professional memo synthesizing all this information following the instructions."""
 
-                task.final_output = self.llm.call(
+                result = self.llm.call(
                     prompt=user_prompt,
                     system_prompt=system_prompt,
-                    max_tokens=2500
+                    max_tokens=2500,
+                    agent_name=self.name
                 )
-                self.logger.info("Final report generated using OpenAI with custom instructions")
+                task.final_output = result['text']
+
+                # Store metrics
+                if 'agent_metrics' not in task.metadata:
+                    task.metadata['agent_metrics'] = []
+                task.metadata['agent_metrics'].append(result['metrics'].to_dict())
+
+                self.logger.info("Final report generated using LLM with custom instructions")
             except Exception as e:
                 self.logger.error(f"Error calling LLM: {e}")
                 task.final_output = f'FINAL REPORT: {task.initial_query}\n\n--- PLAN ---\n{task.plan}\n\n--- RESEARCH ---\n{task.research_data}\n\n--- ANALYSIS ---\n{task.analysis}'
