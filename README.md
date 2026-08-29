@@ -95,10 +95,9 @@ GOOGLE_API_KEY=your-google-api-key-here
 python3 verify_setup.py
 ```
 
-Confirms your `.env` is present and readable, the dependencies are installed,
-and the LLM handler and agents import cleanly before you run the pipeline.
-(This check currently looks for `OPENAI_API_KEY` specifically, so it reports a
-failure on a Gemini-only setup even though the pipeline itself runs fine.)
+Reads `LLM_PROVIDER` from your `.env` and checks the setup for whichever
+backend it selects — the right API key, that provider's SDK, and that the LLM
+handler and agents import cleanly — before you run the pipeline.
 
 ### 4. Run the CLI Example
 

@@ -24,11 +24,11 @@ except ImportError:
     logger.warning("OpenAI library not installed. Install with: pip install openai")
 
 try:
-    import google.generativeai as genai
+    from google import genai
     GOOGLE_AVAILABLE = True
 except ImportError:
     GOOGLE_AVAILABLE = False
-    logger.warning("Google Generative AI library not installed. Install with: pip install google-generativeai")
+    logger.warning("Google Gen AI library not installed. Install with: pip install google-genai")
 
 
 class LLMHandler:
@@ -46,7 +46,7 @@ class LLMHandler:
 
         if self.llm_provider == 'google':
             if not GOOGLE_AVAILABLE:
-                raise ImportError("Google Generative AI library not installed. Run: pip install google-generativeai")
+                raise ImportError("Google Gen AI library not installed. Run: pip install google-genai")
 
             self.google_api_key = os.getenv('GOOGLE_API_KEY')
             if not self.google_api_key:
@@ -55,9 +55,8 @@ class LLMHandler:
                     "Create a .env file with: GOOGLE_API_KEY=your-key-here"
                 )
 
-            genai.configure(api_key=self.google_api_key)
-            self.model_name = model_name or os.getenv('GOOGLE_MODEL', 'gemini-pro-latest')
-            self.model = genai.GenerativeModel(self.model_name)
+            self.client = genai.Client(api_key=self.google_api_key)
+            self.model_name = model_name or os.getenv('GOOGLE_MODEL', 'gemini-flash-latest')
             logger.info(f"LLM Handler initialized with Google Gemini model: {self.model_name}")
 
         elif self.llm_provider == 'openai':
@@ -98,13 +97,23 @@ class LLMHandler:
         try:
             if self.llm_provider == 'google':
                 full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-                response = self.model.generate_content(full_prompt)
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=full_prompt,
+                )
                 result = response.text
                 duration = time.time() - start_time
 
-                # Estimate tokens for Gemini (no exact counts from API)
-                prompt_tokens = len(full_prompt) // 4
-                completion_tokens = len(result) // 4
+                # The Gen AI SDK reports real token counts; fall back to a
+                # character-based estimate if usage metadata is absent.
+                usage = getattr(response, 'usage_metadata', None)
+                estimated = usage is None
+                if estimated:
+                    prompt_tokens = len(full_prompt) // 4
+                    completion_tokens = len(result) // 4
+                else:
+                    prompt_tokens = usage.prompt_token_count or 0
+                    completion_tokens = usage.candidates_token_count or 0
 
                 metrics = LLMCallMetrics(
                     agent_name=agent_name,
@@ -114,7 +123,7 @@ class LLMHandler:
                     completion_tokens=completion_tokens,
                     total_tokens=prompt_tokens + completion_tokens,
                     duration_seconds=round(duration, 2),
-                    tokens_estimated=True,
+                    tokens_estimated=estimated,
                 )
                 logger.info(f"Google Gemini call successful. ~{metrics.total_tokens} tokens (est), {duration:.2f}s")
                 return {'text': result, 'metrics': metrics}
@@ -162,7 +171,7 @@ class LLMHandler:
         models = []
 
         if GOOGLE_AVAILABLE and os.getenv('GOOGLE_API_KEY'):
-            models.append({'provider': 'google', 'model': os.getenv('GOOGLE_MODEL', 'gemini-pro-latest'),
+            models.append({'provider': 'google', 'model': os.getenv('GOOGLE_MODEL', 'gemini-flash-latest'),
                            'label': 'Google Gemini'})
 
         if OPENAI_AVAILABLE and os.getenv('OPENAI_API_KEY'):
