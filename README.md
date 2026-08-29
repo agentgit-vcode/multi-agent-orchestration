@@ -49,6 +49,11 @@ multi-agent-orchestration/
 │   └── technical_analysis.txt
 ├── templates/
 │   └── index.html             # Web interface HTML
+├── docs/                      # Reference documentation (see below)
+├── examples.py                # Running the pipeline directly in Python
+├── workflow_example.py        # End-to-end demo driving the running web API
+├── api_client_examples.py     # REST API client patterns
+├── verify_setup.py            # Preflight check: .env, dependencies, agents
 ├── .env.example               # Environment variable template
 ├── requirements.txt           # Python dependencies
 └── README.md                  # This file
@@ -84,13 +89,24 @@ GOOGLE_API_KEY=your-google-api-key-here
 # OPENAI_TEMPERATURE=0.7
 ```
 
-### 3. Run the CLI Example
+### 3. Verify the Setup
+
+```bash
+python3 verify_setup.py
+```
+
+Confirms your `.env` is present and readable, the dependencies are installed,
+and the LLM handler and agents import cleanly before you run the pipeline.
+(This check currently looks for `OPENAI_API_KEY` specifically, so it reports a
+failure on a Gemini-only setup even though the pipeline itself runs fine.)
+
+### 4. Run the CLI Example
 
 ```bash
 python3 main.py
 ```
 
-### 4. Run the Web Interface
+### 5. Run the Web Interface
 
 ```bash
 python3 run_web_interface.py
@@ -199,6 +215,50 @@ You are tasked with the following question: {question}
 
 Please provide a detailed, step-by-step response.
 ```
+
+## Writing Good Queries
+
+The pipeline produces a memo, so it rewards scenarios over one-liners. Give it
+the constraints you actually have — scale, budget, timeline, the hard
+requirement — and the agents have something to plan, research, and weigh.
+
+**Do this:**
+
+```text
+We need to decide whether to migrate our 20-year-old monolithic system to
+microservices. We have 150 engineers, a $5M budget, and a 6-month timeline.
+Our constraint is zero downtime. Should we proceed?
+```
+
+**Not this:**
+
+```text
+Should we use microservices?
+```
+
+## FAQ
+
+**Can I change the order of the agents?**
+Yes — reorder them when constructing the `Orchestrator`:
+
+```python
+orchestrator = Orchestrator([AnalyzerAgent(), PlannerAgent(), ResearcherAgent(), PublisherAgent()])
+```
+
+**Can I skip an agent?** Yes — leave it out of the list.
+
+**How do I pass data between agents?** Everything moves through the `Task`
+object. Each agent reads the fields it needs and writes its own output back.
+
+## Documentation
+
+| Document | Covers |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | System layers, data flow, component interaction, deployment and scaling notes |
+| [docs/llm-setup.md](docs/llm-setup.md) | Provider setup, model and temperature tuning, token limits, cost estimates, troubleshooting |
+| [docs/agent-instructions.md](docs/agent-instructions.md) | How per-agent instruction files reach the LLM, and how to rewrite them |
+| [docs/web-interface.md](docs/web-interface.md) | Web UI walkthrough and full REST API reference |
+| [docs/configuration.md](docs/configuration.md) | Server, template, API, and logging configuration |
 
 ## Features
 

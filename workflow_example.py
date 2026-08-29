@@ -297,9 +297,9 @@ NEXT STEPS:
    - Set up monitoring and logging
 
 DOCUMENTATION:
-- QUICKSTART.md - Quick setup guide
-- WEB_INTERFACE_GUIDE.md - Detailed user guide
-- CONFIGURATION_GUIDE.md - Advanced setup
+- README.md - Setup and quick start
+- docs/web-interface.md - Detailed user guide and API reference
+- docs/configuration.md - Advanced setup
 - api_client_examples.py - Code examples
 
 """)
